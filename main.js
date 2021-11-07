@@ -53,11 +53,7 @@ function rgbToHue(rgb) {
 }
 var spotifyApi = new SpotifyWebApi();
 const colorThief = new ColorThief();
-spotifyApi.setAccessToken('BQCcotnJlnlYoAN8RjQpAY5jijZ57No9Pl5CrjaCQNzWES5gtlw7EtIVl7p9ljftf7WDXKETCCTxbs63c1QhO4yhx6Zmd-qJZeghxgUBtcphum-GCdj2JwnLMI_71DXwhEOjCfOv0YQJQkCYIGuJ-iF0O7vOhswVf0pihnLjdAoCd2PfqREL0ggHEAu3DL9CEpMfMa4lCWJvRTEyY2od2iAcPFg831T36tzTeQTMZjnxZb9HI2uHQOwZfCgT6UwkC7Tv3uo1lXxJbp2tLpoDrSUAoAX8rBrIJYt-ncZHC4Rv');
-spotifyApi.getArtistAlbums('43ZHCT0cAZBISjO8DG9PnE', function (err, data) {
-    if (err) console.error(err);
-    else { console.log('Artist albums', data); dada = data };
-});
+spotifyApi.setAccessToken('BQDutekXrRwrrveD8uT260P93qAgaltI_MxQ2vpxtYfjE6cOuex2OiAvCkF7paSF2IMCtEdls97ip5wW-YYql-UN7nPf9f2tbXgrd9ZtGYVBHJyjA-lYi64NGyqQmlVgBmkRmuIjBO5qwXhRFSusOL3wnm_8oLD-P7xap7XfsksLyNt-JAl5A5RapBVSG7mbwcdqnxgsRRyA-CEmX3UY19UWP9WfBwBXIP9RQbvU34ynP0LLWmPYlpugtD4Fgr-e9ZkSORYj9BjhDN0a1S03q5VOqXoreY0NuvS1_KU7LhaK');
 function getListened(depth) {
     let ret = [];
     ret = spotifyApi.getMySavedTracks({ limit: 20 }).then(function (data) {
@@ -67,41 +63,32 @@ function getListened(depth) {
 
     return ret;
 }
-async function getPlaylistWithTracks(id) {
-    const playlist = (await spotifyApi.getPlaylist(id))
-
+async function getPlaylistWithTracks(id, offset = 0) {
+    const playlist = await spotifyApi.getPlaylist(id);
     // if there is more tracks than the limit (100 by default)
-    if (playlist.tracks.total > playlist.tracks.limit) {
 
-        // Divide the total number of track by the limit to get the number of API calls
-        for (let i = 0; i < Math.ceil(playlist.tracks.total / playlist.tracks.limit); i++) {
 
-            const trackToAdd = (await spotifyApi.getPlaylistTracks(id, {
-                offset: playlist.tracks.limit * i // Offset each call by the limit * the call's index
-            }));
+    // Divide the total number of track by the limit to get the number of API calls
+    return await spotifyApi.getPlaylistTracks(id, {
+        offset: offset // Offset each call by the limit * the call's index
+    });
 
-            // Push the retreived tracks into the array
-            trackToAdd.items.forEach((item) => playlist.tracks.items.push(item));
-        }
-    }
-
-    return playlist
 }
 async function getTracks(ids) {
     songs = [];
 
     // if there is more tracks than the limit (100 by default)
-    if (ids.length > 50) {
-        console.log()
-        // Divide the total number of track by the limit to get the number of API calls
-        for (let i = 0; i < Math.ceil(ids.length / 50); i++) {
 
-            const trackToAdd = (await spotifyApi.getTracks(ids.slice(50 * i, 50 * (i + 1))));
 
-            // Push the retreived tracks into the array
-            trackToAdd.tracks.forEach((item) => songs.push(item));
-        }
+    // Divide the total number of track by the limit to get the number of API calls
+    for (let i = 0; i < Math.ceil(ids.length / 50); i++) {
+
+        const trackToAdd = (await spotifyApi.getTracks(ids.slice(50 * i, 50 * (i + 1))));
+
+        // Push the retreived tracks into the array
+        trackToAdd.tracks.forEach((item) => songs.push(item));
     }
+
 
     return songs
 }
@@ -109,37 +96,39 @@ async function getFeatures(ids) {
     songs = [];
 
     // if there is more tracks than the limit (100 by default)
-    if (ids.length > 50) {
-        console.log()
-        // Divide the total number of track by the limit to get the number of API calls
-        for (let i = 0; i < Math.ceil(ids.length / 50); i++) {
 
-            const trackToAdd = (await spotifyApi.getAudioFeaturesForTracks(ids.slice(50 * i, 50 * (i + 1))));
+    // Divide the total number of track by the limit to get the number of API calls
+    for (let i = 0; i < Math.ceil(ids.length / 50); i++) {
 
-            // Push the retreived tracks into the array
-            trackToAdd.audio_features.forEach((item) => songs.push(item));
-        }
+        const trackToAdd = (await spotifyApi.getAudioFeaturesForTracks(ids.slice(50 * i, 50 * (i + 1))));
+
+        // Push the retreived tracks into the array
+        trackToAdd.audio_features.forEach((item) => songs.push(item));
     }
-
     return songs
 }
 
-async function getWhatever() {
-    getPlaylistWithTracks('46yFRyWFyu30ONXKZ3vMG7').then(async function (result) {
-        console.log(result)
-        result = (await getFeatures(result.tracks.items.map(t => t.track.id)))
-        return result;
+function getList() {
+    const id = '361wdMbdgp9UnjvEufIU8J'
+    getPlaylistWithTracks(id).then(async function (result) {
+        console.log('***', result);
+        const ret = result.items;
+        while (result.next) {
+            result = await getPlaylistWithTracks(id, result.offset + 100);
+            ret.push(...result.items)
+        }
+        return await getFeatures(ret.map(t => t.track.id));
     }
     ).then(async function (result) {
         console.log(result);
-        result.sort((a, b) => a.duration_ms - b.duration_ms)
+        result.sort((a, b) => a.liveness - b.liveness);
         result = result.map(x => x.id);
-        console.log(result)
-        await getTracks([...result]).then(function (data) {
-            console.log(toUniqueArray(data.map(x => x.name)).join`,`)
+        console.log('xxx', result);
+        await getTracks(result).then(function (data) {
+            console.log(toUniqueArray(data.map(x => x.name)).join`, `)
             console.log(data);
             for (let i = 0; i < data.length; i++)
-                document.write('<img src="' + data[i].album.images[0].url + '" data-album-id="' + data[i].id + '" title="' + data[i].name + '" >')
+                document.write(`<img src="${data[i].album.images[0].url}" title="${data[i].name}">`)
         })
     })
 }
@@ -167,7 +156,6 @@ function getPlaylists() {
                         imgnum++;
                         if (imgnum == data.items.length)
                             datastuff(data);
-                        // console.log(data);
 
                     });
                 }
@@ -182,26 +170,22 @@ function datastuff(data) {
         imgData[i] = "";
     }
     imgData = imgData.map(function (x, i) { return { "hue": data.items[i].hue, "lnk": data.items[i].track.album.images[0].url } })
-    imgData = bubbleSort(imgData)
+    imgData = bubbleSort(imgData);
     for (let i = 0; i < imgData.length; i++) {
         document.write('<img src="' + imgData[i].lnk + '"crossorigin="anonymus" width="250" height="250"/>');
         if (i % 7 == 6)
-            document.write('<br>')
-        // console.log(data.items[i].track.name);
+            document.write('<br>');
     }
-    // console.log(imgData)
 }
 function getAlbums() {
     spotifyApi.getMySavedAlbums({ limit: 50 }, function (err, data) {
         if (err) console.error(err);
         else {
-            // console.log(data);
             for (let i = 0; i < data.items.length; i++) {
-                document.write('<img src="' + data.items[i].album.images[0].url + '"width="500" height="500"/>')
+                document.write('<img src="' + data.items[i].album.images[0].url + '"width="500" height="500"/>');
             }
 
         }
     })
 }
-// getPlaylists();
-getWhatever();
+getList();
