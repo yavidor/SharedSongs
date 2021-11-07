@@ -16,10 +16,11 @@ function toUniqueArray(a) {
         if (newArr.indexOf(a[i]) === -1) {
             newArr.push(a[i]);
         }
+        else
+            console.log(a[i])
     }
     return newArr;
 }
-let dada;
 let moshed;
 let imgnum = 0;
 function rgbToHue(rgb) {
@@ -53,7 +54,7 @@ function rgbToHue(rgb) {
 }
 var spotifyApi = new SpotifyWebApi();
 const colorThief = new ColorThief();
-spotifyApi.setAccessToken('BQDutekXrRwrrveD8uT260P93qAgaltI_MxQ2vpxtYfjE6cOuex2OiAvCkF7paSF2IMCtEdls97ip5wW-YYql-UN7nPf9f2tbXgrd9ZtGYVBHJyjA-lYi64NGyqQmlVgBmkRmuIjBO5qwXhRFSusOL3wnm_8oLD-P7xap7XfsksLyNt-JAl5A5RapBVSG7mbwcdqnxgsRRyA-CEmX3UY19UWP9WfBwBXIP9RQbvU34ynP0LLWmPYlpugtD4Fgr-e9ZkSORYj9BjhDN0a1S03q5VOqXoreY0NuvS1_KU7LhaK');
+spotifyApi.setAccessToken('BQAJeso3FW6vfiSOhi2LefuTN-5vMsEGMqpuM0t1LlPq-jSQdl1TgiQe5eeSWMfW6OAdC6Im9O6xM0IvcBShCCCuEnfzutUY_nchrJLYZS4kaLU0D0WTSeA0DNlSx1iYubQvTMWCLRsy1QWpb5pF_-r1WMoa7eygEy_4FCTL7llI8-Ur_DKnIO1BhKAeoSgwy1aGfZZOvLGTLFV74jzFRcBg3PGu7jhwnPGLBuAV3dYImoFInkbKGuD4dyAqK5UoqHHpm4l4YHRFujz7qzIbpRJrwn5IPo29bzMQwOpwzptJ');
 function getListened(depth) {
     let ret = [];
     ret = spotifyApi.getMySavedTracks({ limit: 20 }).then(function (data) {
@@ -64,15 +65,10 @@ function getListened(depth) {
     return ret;
 }
 async function getPlaylistWithTracks(id, offset = 0) {
-    const playlist = await spotifyApi.getPlaylist(id);
-    // if there is more tracks than the limit (100 by default)
-
-
-    // Divide the total number of track by the limit to get the number of API calls
-    return await spotifyApi.getPlaylistTracks(id, {
-        offset: offset // Offset each call by the limit * the call's index
-    });
-
+    // return await spotifyApi.getPlaylistTracks(id, {
+    //     offset: offset
+    // });
+    return await spotifyApi.getMySavedTracks({ limit: 50, offset: offset });
 }
 async function getTracks(ids) {
     songs = [];
@@ -92,7 +88,7 @@ async function getTracks(ids) {
 
     return songs
 }
-async function getFeatures(ids) {
+async function getFeatures(ids, tracks) {
     songs = [];
 
     // if there is more tracks than the limit (100 by default)
@@ -105,31 +101,35 @@ async function getFeatures(ids) {
         // Push the retreived tracks into the array
         trackToAdd.audio_features.forEach((item) => songs.push(item));
     }
+    for (let i = 0; i < songs.length; i++) {
+        songs[i] = { "features": songs[i], "track": tracks[i] }
+    }
     return songs
 }
 
 function getList() {
-    const id = '361wdMbdgp9UnjvEufIU8J'
+    const param = 'energy'
+    const id = '3wA3D6ZvPxN6LNZdj1Y8pW'
     getPlaylistWithTracks(id).then(async function (result) {
         console.log('***', result);
         const ret = result.items;
         while (result.next) {
-            result = await getPlaylistWithTracks(id, result.offset + 100);
+            result = await getPlaylistWithTracks(id, result.offset + 50);
             ret.push(...result.items)
         }
-        return await getFeatures(ret.map(t => t.track.id));
+        return await getFeatures(ret.map(t => t.track.id), ret.map(t => t.track));
     }
     ).then(async function (result) {
         console.log(result);
-        result.sort((a, b) => a.liveness - b.liveness);
-        result = result.map(x => x.id);
+        console.log(param);
+        result.sort((a, b) => a.features[param] - b.features[param]);
+        // result = result.map(function(x){return {"track":x.track,"param":`${param} ${x.features[param]}`}});
         console.log('xxx', result);
-        await getTracks(result).then(function (data) {
-            console.log(toUniqueArray(data.map(x => x.name)).join`, `)
-            console.log(data);
-            for (let i = 0; i < data.length; i++)
-                document.write(`<img src="${data[i].album.images[0].url}" title="${data[i].name}">`)
-        })
+        console.log(toUniqueArray(result.map(x => x.name)).join`, `)
+        console.log(result);
+        for (let i = 0; i < result.length; i++)
+            document.write(`<img src="${result[i].track.album.images[0].url}" title="${result[i].track.name} - ${result[i].track.artists[0].name} \n ${param} - ${result[i].features[param] * 100} \n Position - ${i+1}">`)
+
     })
 }
 function getPlaylists() {
