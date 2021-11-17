@@ -10,6 +10,9 @@ function bubbleSort(arr) {
     }
     return arr;
 }
+function noder(x){
+    console.log(`NODER AMARTI LECHA ${x}`)
+}
 function toUniqueArray(a) {
     var newArr = [];
     for (var i = 0; i < a.length; i++) {
