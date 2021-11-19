@@ -1,18 +1,3 @@
-function bubbleSort(arr) {
-    for (let i = 0; i < arr.length; i++) {
-        for (let j = 0; j < arr.length - i - 1; j++) {
-            if (arr[j + 1].hue < arr[j].hue) {
-                temp = arr[j];
-                arr[j] = arr[j + 1];
-                arr[j + 1] = temp;
-            }
-        }
-    }
-    return arr;
-}
-function noder(x){
-    console.log(`NODER AMARTI LECHA ${x}`)
-}
 function toUniqueArray(a) {
     var newArr = [];
     for (var i = 0; i < a.length; i++) {
@@ -24,7 +9,6 @@ function toUniqueArray(a) {
     }
     return newArr;
 }
-let moshed;
 let imgnum = 0;
 function rgbToHue(rgb) {
     var h;
@@ -57,7 +41,7 @@ function rgbToHue(rgb) {
 }
 var spotifyApi = new SpotifyWebApi();
 const colorThief = new ColorThief();
-spotifyApi.setAccessToken('BQC-Sgn-7HS1gqUhNpOwmGpsFp_bH1QisCriHxfxszUvZL8ogUk55j5IvXm-Wj0vcqEaUAjAjlTOiGI6v3Q7AjH0PDFRuZcY7jlWIwlL0lkVv_XbkdbkkNbZy90b6KsinApeZl7n0W34aNhqqRTm-BMOSaUUY4BGccVXw032N2oA5FTC_xCEUuf0gtKCAlYq-zXZ87wmHW0WjJKaA_rdTVF58rSsUT26xKX-NRJYBkUYCLGU5h8f2YZ58Z_-6RyAh9pp37eMfyzT5JdxxkEQjHpau0vm6mRgZrNYrzDdFP9k');
+spotifyApi.setAccessToken('BQCCw_F0_g6tO8IBtTXK4IHdN_ETzJqybCXHs1FwzpBL5ozewkGEhQrii1A8aifgY74EJVzRqr9cBvT1O9AN-mzRxGbLcfXtoUf_7WREiMsB9uLiThotVraNE2otNH7Mc6vLhSTekPxYFF-YzuxNvmXS_SsmOHW73sJYobxXd2QaZ7fVbTCtwgFHuOtkkH209UBzE0LqpyuRjuTyUy2EAx-19m0Gp1kQvOheLGYEF68HnMj3VLPAoKBqFaauPHydLtO2WGv1vYNQs_X_giU-qitOPTecqSsjDzZh5PidkOvC');
 function getListened(depth) {
     let ret = [];
     ret = spotifyApi.getMySavedTracks({ limit: 20 }).then(function (data) {
@@ -75,16 +59,8 @@ async function getPlaylistWithTracks(id, offset = 0) {
 }
 async function getTracks(ids) {
     songs = [];
-
-    // if there is more tracks than the limit (100 by default)
-
-
-    // Divide the total number of track by the limit to get the number of API calls
     for (let i = 0; i < Math.ceil(ids.length / 50); i++) {
-
         const trackToAdd = (await spotifyApi.getTracks(ids.slice(50 * i, 50 * (i + 1))));
-
-        // Push the retreived tracks into the array
         trackToAdd.tracks.forEach((item) => songs.push(item));
     }
 
@@ -93,10 +69,6 @@ async function getTracks(ids) {
 }
 async function getFeatures(ids, tracks) {
     songs = [];
-
-    // if there is more tracks than the limit (100 by default)
-
-    // Divide the total number of track by the limit to get the number of API calls
     for (let i = 0; i < Math.ceil(ids.length / 50); i++) {
 
         const trackToAdd = (await spotifyApi.getAudioFeaturesForTracks(ids.slice(50 * i, 50 * (i + 1))));
@@ -125,13 +97,13 @@ function getList() {
     ).then(async function (result) {
         console.log(result);
         console.log(param);
-        result.sort((a, b) => a.features[param] - b.features[param]);
+        result.sort((a, b) => a.track.name.length - b.track.name.length);
         // result = result.map(function(x){return {"track":x.track,"param":`${param} ${x.features[param]}`}});
         console.log('xxx', result);
         console.log(toUniqueArray(result.map(x => x.name)).join`, `)
         console.log(result);
         for (let i = 0; i < result.length; i++)
-            document.write(`<img src="${result[i].track.album.images[0].url}" title="${result[i].track.name} - ${result[i].track.artists[0].name} \n ${param} - ${result[i].features[param] * 100} \n Position - ${i+1}">`)
+            document.write(`<img src="${result[i].track.album.images[0].url}" title="${result[i].track.name} - ${result[i].track.artists[0].name} \n ${param} - ${result[i].track.name.length} \n Position - ${i + 1}">`)
 
     })
 }
