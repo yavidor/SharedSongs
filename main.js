@@ -57,7 +57,7 @@ function rgbToHue(rgb) {
 }
 var spotifyApi = new SpotifyWebApi();
 const colorThief = new ColorThief();
-spotifyApi.setAccessToken('BQDLyKBXuMtbrS24dMAKBFCjsXPsAluzOOucljXxuIeRtv14QRa8A3tRBjAulc2MNia7VCtxa8mddkugdOWWbTh6l53GGzrhXh2prTMWEfYeOX_pMp8uBckhScCsvQ5o_rZFi6qvNIF6ZEBszGv_BcTU7ft3bLDQUu6exdQ0WrM93SMTr2uWqFJpQBW7sd94vkZJpn29JvKM_9r0MWeb9DVl41_rRDG4MEWpMQSpZ5buWEd7QMnlfM27FwiVno-W0uQHgnG5nSumlbJADNReBystj1b0gci0nPRtx2o2TxgP');
+spotifyApi.setAccessToken('BQC-Sgn-7HS1gqUhNpOwmGpsFp_bH1QisCriHxfxszUvZL8ogUk55j5IvXm-Wj0vcqEaUAjAjlTOiGI6v3Q7AjH0PDFRuZcY7jlWIwlL0lkVv_XbkdbkkNbZy90b6KsinApeZl7n0W34aNhqqRTm-BMOSaUUY4BGccVXw032N2oA5FTC_xCEUuf0gtKCAlYq-zXZ87wmHW0WjJKaA_rdTVF58rSsUT26xKX-NRJYBkUYCLGU5h8f2YZ58Z_-6RyAh9pp37eMfyzT5JdxxkEQjHpau0vm6mRgZrNYrzDdFP9k');
 function getListened(depth) {
     let ret = [];
     ret = spotifyApi.getMySavedTracks({ limit: 20 }).then(function (data) {
