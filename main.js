@@ -41,7 +41,7 @@ function rgbToHue(rgb) {
 }
 var spotifyApi = new SpotifyWebApi();
 const colorThief = new ColorThief();
-spotifyApi.setAccessToken('BQCCw_F0_g6tO8IBtTXK4IHdN_ETzJqybCXHs1FwzpBL5ozewkGEhQrii1A8aifgY74EJVzRqr9cBvT1O9AN-mzRxGbLcfXtoUf_7WREiMsB9uLiThotVraNE2otNH7Mc6vLhSTekPxYFF-YzuxNvmXS_SsmOHW73sJYobxXd2QaZ7fVbTCtwgFHuOtkkH209UBzE0LqpyuRjuTyUy2EAx-19m0Gp1kQvOheLGYEF68HnMj3VLPAoKBqFaauPHydLtO2WGv1vYNQs_X_giU-qitOPTecqSsjDzZh5PidkOvC');
+spotifyApi.setAccessToken('BQAZPi9EkfnTb-j230bKKqWcTSiS8UR-m9OnPkI1JokUkGphvMQXRMFYNA28td37635tGjgJQwYM7XA8PbHUkQjW0p08hNor-QitvA1yESQMnemfEEbV9Ldp6KbiwMSI5D5y6gcUKhkNCrVMvefJM1EC1pPDYK35BQRLthwh8GwUo49ovWkleydDTd_6k-EaIGrHdaRW-1TGzljT-14HF6Wh2ApZwlqFFtvvOmwbgcGPj20WKoB8nSxMi8baF-k75mR8DDDumOID4_BgPnW_NzX676qvwDp4O-LQkqKlKw8h');
 function getListened(depth) {
     let ret = [];
     ret = spotifyApi.getMySavedTracks({ limit: 20 }).then(function (data) {
@@ -56,6 +56,16 @@ async function getPlaylistWithTracks(id, offset = 0) {
     //     offset: offset
     // });
     return await spotifyApi.getMySavedTracks({ limit: 50, offset: offset });
+}
+function sumFeatures(track) {
+    return track.features.acousticness + track.features.energy
+        + track.features.danceability + track.features.instrumentalness
+        + track.features.liveness + track.features.loudness + track.features.speechiness + track.features.valence;// + track.features.tempo + track.features.valence;
+}
+function getDelta(first, second) {
+    //Gets the difference between two tracks
+    return Math.abs(sumFeatures(first) - sumFeatures(second));
+
 }
 async function getTracks(ids) {
     songs = [];
@@ -82,9 +92,10 @@ async function getFeatures(ids, tracks) {
     return songs
 }
 
-function getList() {
+async function getList() {
     const param = 'energy'
     const id = '3wA3D6ZvPxN6LNZdj1Y8pW'
+    let search = await spotifyApi.search(prompt("Songs"),["track"]);
     getPlaylistWithTracks(id).then(async function (result) {
         console.log('***', result);
         const ret = result.items;
@@ -92,19 +103,26 @@ function getList() {
             result = await getPlaylistWithTracks(id, result.offset + 50);
             ret.push(...result.items)
         }
-        return await getFeatures(ret.map(t => t.track.id), ret.map(t => t.track));
+        urn = await getFeatures(ret.map(t => t.track.id), ret.map(t => t.track))
+        return {"search":search.tracks.items,"track":urn}
     }
     ).then(async function (result) {
-        console.log(result);
+        search = result.search;
+        result = result.track;
         console.log(param);
-        result.sort((a, b) => a.track.name.length - b.track.name.length);
+        // result.sort((a, b) => a.track.name.length - b.track.name.length);
         // result = result.map(function(x){return {"track":x.track,"param":`${param} ${x.features[param]}`}});
+        search = await getFeatures(search.map(t=>t.id),search)
+        console.log(search);
+        result = result.map(function (x) { return { "track": x.track, "features": x.features, "delta": getDelta(x, search[0]) } })
+        result.sort((a, b) => a.delta - b.delta);
+        console.log(toUniqueArray(result.map(x => x.track.name)).join`, `)
         console.log('xxx', result);
-        console.log(toUniqueArray(result.map(x => x.name)).join`, `)
-        console.log(result);
-        for (let i = 0; i < result.length; i++)
-            document.write(`<img src="${result[i].track.album.images[0].url}" title="${result[i].track.name} - ${result[i].track.artists[0].name} \n ${param} - ${result[i].track.name.length} \n Position - ${i + 1}">`)
-
+        for (let i = 0; i < result.length; i++) {
+            document.write(`<img src="${result[i].track.album.images[0].url}" title="${result[i].track.name}
+             - ${result[i].track.artists[0].name} \n ${param} - ${result[i].delta} \n Position - ${i + 1}">`)
+        }
+        imgnum = result;
     })
 }
 function getPlaylists() {
