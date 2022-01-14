@@ -4,11 +4,39 @@ function toUniqueArray(a) {
         if (newArr.indexOf(a[i]) === -1) {
             newArr.push(a[i]);
         }
-        else
-            console.log(a[i])
+        // else
+            // console.log(a[i])
     }
     return newArr;
 }
+function pic(url) {
+    // Create a new `Image` instance
+    var image = new Image();
+  
+    image.onload = function() {
+      // Inside here we already have the dimensions of the loaded image
+      var style = [
+        // Hacky way of forcing image's viewport using `font-size` and `line-height`
+        'font-size: 1px;',
+        'line-height: ' + this.height + 'px;',
+  
+        // Hacky way of forcing a middle/center anchor point for the image
+        'padding: ' + this.height * .5 + 'px ' + this.width * .5 + 'px;',
+  
+        // Set image dimensions
+        'background-size: ' + this.width + 'px ' + this.height + 'px;',
+  
+        // Set image URL
+        'background: no-repeat url('+ url +');'
+       ].join(' ');
+  
+       // notice the space after %c
+       console.log('%c ', style);
+    };
+  
+    // Actually loads the image
+    image.src = url;
+  }
 let imgnum = 0;
 function rgbToHue(rgb) {
     var h;
@@ -41,7 +69,7 @@ function rgbToHue(rgb) {
 }
 var spotifyApi = new SpotifyWebApi();
 const colorThief = new ColorThief();
-spotifyApi.setAccessToken('BQAZPi9EkfnTb-j230bKKqWcTSiS8UR-m9OnPkI1JokUkGphvMQXRMFYNA28td37635tGjgJQwYM7XA8PbHUkQjW0p08hNor-QitvA1yESQMnemfEEbV9Ldp6KbiwMSI5D5y6gcUKhkNCrVMvefJM1EC1pPDYK35BQRLthwh8GwUo49ovWkleydDTd_6k-EaIGrHdaRW-1TGzljT-14HF6Wh2ApZwlqFFtvvOmwbgcGPj20WKoB8nSxMi8baF-k75mR8DDDumOID4_BgPnW_NzX676qvwDp4O-LQkqKlKw8h');
+spotifyApi.setAccessToken('BQCPdC13s3PdBq7fwlHym2rW9ZGYP9vr_1PmQiS2bK_ix5IOLoSvumD__ZE_njL_ZJbUPBAdqKji5GtwvEQpthdvpMyzkprpU_RMbltZh8ucI-uUdnwQRhIam7PFI0XmYxNivfqUmvyP-qkAbmrGF72Fa2mS3UQw5soupyeObHlBOLX4xZgDaf8KghngtZ4zHd_auBKhXfw159ZwsoPStnewkIFvRqp-ggIJkYkZnGN90Fw6qc072q1ry_bsDYLdexr0oLGg_6O9U6D5W8qA6dZpDVGim03qVCmZTwK_6tag');
 function getListened(depth) {
     let ret = [];
     ret = spotifyApi.getMySavedTracks({ limit: 20 }).then(function (data) {
@@ -103,7 +131,7 @@ async function getList() {
             result = await getPlaylistWithTracks(id, result.offset + 50);
             ret.push(...result.items)
         }
-        urn = await getFeatures(ret.map(t => t.track.id), ret.map(t => t.track))
+        urn = await getFeatures(ret.map(t => t.track.id), ret.map(t => t.track));
         return {"search":search.tracks.items,"track":urn}
     }
     ).then(async function (result) {
@@ -113,10 +141,11 @@ async function getList() {
         // result.sort((a, b) => a.track.name.length - b.track.name.length);
         // result = result.map(function(x){return {"track":x.track,"param":`${param} ${x.features[param]}`}});
         search = await getFeatures(search.map(t=>t.id),search)
+        pic(search[0].track.album.images[1].url)
         console.log(search);
         result = result.map(function (x) { return { "track": x.track, "features": x.features, "delta": getDelta(x, search[0]) } })
         result.sort((a, b) => a.delta - b.delta);
-        console.log(toUniqueArray(result.map(x => x.track.name)).join`, `)
+        // console.log(toUniqueArray(result.map(x => x.track.name)).join`, `)
         console.log('xxx', result);
         for (let i = 0; i < result.length; i++) {
             document.write(`<img src="${result[i].track.album.images[0].url}" title="${result[i].track.name}
