@@ -69,7 +69,7 @@ function rgbToHue(rgb) {
 }
 var spotifyApi = new SpotifyWebApi();
 const colorThief = new ColorThief();
-spotifyApi.setAccessToken('BQCPdC13s3PdBq7fwlHym2rW9ZGYP9vr_1PmQiS2bK_ix5IOLoSvumD__ZE_njL_ZJbUPBAdqKji5GtwvEQpthdvpMyzkprpU_RMbltZh8ucI-uUdnwQRhIam7PFI0XmYxNivfqUmvyP-qkAbmrGF72Fa2mS3UQw5soupyeObHlBOLX4xZgDaf8KghngtZ4zHd_auBKhXfw159ZwsoPStnewkIFvRqp-ggIJkYkZnGN90Fw6qc072q1ry_bsDYLdexr0oLGg_6O9U6D5W8qA6dZpDVGim03qVCmZTwK_6tag');
+spotifyApi.setAccessToken('BQCdQ-HDdNhFdYsmp2pxQm57sIwrXnAPuPm4p-Amrl2kwaHEFgG3yoQTIntA4eYnyYSxIwqvWdVgToRxTgPRkDVzq0fvXyfC8ON8NDDv24_ZTqZPH32Az57FVU0HIEBQ4glQW1bbajAZesfI4oHbK6dafu_ze-8wEtEbxijrIhSn5nk7AnDxcFI8eP98_CylLgsMTIbldDoDdy12jYWhBt_t6cAid636euBCBMHmSg6j5I4B9x0K8AUaiTTbTFPtQU_R5Hn8I5wBX_sWIwXf-t2FBWFrsMoB8V6UhvfdKxsTLNKEWs070tlUv3Dxz0xOOiSFy0CkMhmW');
 function getListened(depth) {
     let ret = [];
     ret = spotifyApi.getMySavedTracks({ limit: 20 }).then(function (data) {
@@ -80,15 +80,16 @@ function getListened(depth) {
     return ret;
 }
 async function getPlaylistWithTracks(id, offset = 0) {
-    // return await spotifyApi.getPlaylistTracks(id, {
-    //     offset: offset
-    // });
-    return await spotifyApi.getMySavedTracks({ limit: 50, offset: offset });
+    return await spotifyApi.getPlaylistTracks(id, {
+        offset: offset
+    });
+    // return await spotifyApi.getMySavedTracks({ limit: 50, offset: offset });
 }
 function sumFeatures(track) {
-    return track.features.acousticness + track.features.energy
+    console.log(track);
+    return (track.features.acousticness + track.features.energy
         + track.features.danceability + track.features.instrumentalness
-        + track.features.liveness + track.features.loudness + track.features.speechiness + track.features.valence;// + track.features.tempo + track.features.valence;
+        + track.features.liveness + track.features.loudness + track.features.speechiness + track.features.valence);// + track.features.tempo + track.features.valence;
 }
 function getDelta(first, second) {
     //Gets the difference between two tracks
@@ -121,8 +122,8 @@ async function getFeatures(ids, tracks) {
 }
 
 async function getList() {
-    const param = 'energy'
-    const id = '3wA3D6ZvPxN6LNZdj1Y8pW'
+    const param = 'delta'
+    const id = '37i9dQZF1EUMDoJuT8yJsl'
     let search = await spotifyApi.search(prompt("Songs"),["track"]);
     getPlaylistWithTracks(id).then(async function (result) {
         console.log('***', result);
@@ -136,9 +137,9 @@ async function getList() {
     }
     ).then(async function (result) {
         search = result.search;
-        result = result.track;
+        result = result.track.filter(x=>x.features);
         console.log(param);
-        // result.sort((a, b) => a.track.name.length - b.track.name.length);
+        console.log(result);
         // result = result.map(function(x){return {"track":x.track,"param":`${param} ${x.features[param]}`}});
         search = await getFeatures(search.map(t=>t.id),search)
         pic(search[0].track.album.images[1].url)
